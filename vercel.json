@@ -11,13 +11,5 @@
       "src": "/(.*)",
       "dest": "/server.js"
     }
-  ],
-  "env": {
-    "PORT": "3001"
-  },
-  "functions": {
-    "server.js": {
-      "maxDuration": 60
-    }
-  }
+  ]
 }
