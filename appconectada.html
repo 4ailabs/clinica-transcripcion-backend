@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Transcripción Clínica - Fase 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .audio-player::-webkit-media-controls-panel {
+            background-color: #e5e7eb;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4f46e5;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 180px;
+            background-color: #374151;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -90px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #374151 transparent transparent transparent;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .output-area {
+            width: 100%;
+            height: 12rem;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            background-color: #f9fafb;
+            overflow-y: auto;
+            color: #374151;
+            white-space: pre-wrap;
+        }
+        .recording-indicator {
+            width: 12px;
+            height: 12px;
+            background-color: red;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 1000;
+        }
+        .status-dev {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+        .status-prod {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+    <!-- Indicador de entorno -->
+    <div id="envIndicator" class="status-indicator"></div>
+
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-2xl">
+        <header class="mb-6 text-center">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Sistema de Transcripción Clínica</h1>
+            <p class="text-gray-600 mt-1">Fase 1: Aterrizaje Clínico-Energético</p>
+        </header>
+
+        <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">Entrada de Audio</h2>
+            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-3 sm:space-y-0">
+                <button id="startRecordBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 10-2 0 7.001 7.001 0 006 6.93V17H7a1 1 0 100 2h6a1 1 0 100-2h-2v-2.07z" clip-rule="evenodd"></path></svg>
+                    Iniciar Grabación
+                </button>
+                <button id="stopRecordBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50" disabled>
+                    Detener Grabación
+                </button>
+            </div>
+            <div class="mt-4 text-center">
+                <label for="audioFile" class="block text-sm font-medium text-gray-700 mb-1">O cargar archivo de audio:</label>
+                <input type="file" id="audioFile" accept="audio/*" class="w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-lg file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-indigo-50 file:text-indigo-700
+                    hover:file:bg-indigo-100 cursor-pointer
+                "/>
+            </div>
+        </div>
+
+        <div id="recordingStatusContainer" class="my-4 text-center min-h-[28px] flex items-center justify-center">
+            <div id="recordingIndicator" class="recording-indicator hidden"></div>
+            <span id="statusMessage" class="text-base text-gray-700 font-medium"></span>
+        </div>
+
+        <div id="audioPlayback" class="my-4 p-3 border border-gray-200 rounded-lg hidden">
+            <h3 class="text-md font-semibold text-gray-700 mb-2">Audio Capturado:</h3>
+            <audio id="audioPlayer" controls class="w-full audio-player rounded-md"></audio>
+        </div>
+        
+        <div id="loadingSpinner" class="hidden flex justify-center items-center my-4">
+            <div class="spinner"></div>
+            <p class="ml-3 text-gray-600">Procesando audio...</p>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 mb-2">Transcripción Generada:</h2>
+            <div id="transcriptionOutput" class="output-area" aria-live="polite">
+                Esperando audio para transcribir...
+            </div>
+        </div>
+
+        <div class="text-center mb-6">
+             <div class="tooltip">
+                <button id="showAnalysisBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-50" disabled>
+                    Mostrar Análisis de IA (Fase 1)
+                </button>
+                <span class="tooltiptext">Mostrar el análisis de la Fase 1 generado por la IA a partir de la transcripción.</span>
+            </div>
+        </div>
+
+        <div id="geminiAnalysisSection" class="mb-6 hidden">
+            <h2 class="text-lg font-semibold text-gray-700 mb-2">Análisis de IA (Fase 1):</h2>
+            <div id="geminiAnalysisOutput" class="output-area" aria-live="polite">
+                Análisis no disponible.
+            </div>
+        </div>
+
+        <footer class="mt-8 text-center">
+            <p class="text-xs text-gray-500">Dr. Miguel Ojeda Ríos - Proyecto de Sistematización Clínica v1.0</p>
+        </footer>
+    </div>
+
+    <script>
+        // Detectar entorno y configurar URL base
+        const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const API_BASE_URL = isProduction ? window.location.origin : 'http://localhost:3001';
+        
+        // Mostrar indicador de entorno
+        const envIndicator = document.getElementById('envIndicator');
+        envIndicator.textContent = isProduction ? '🚀 PRODUCCIÓN' : '🔧 DESARROLLO';
+        envIndicator.className = `status-indicator ${isProduction ? 'status-prod' : 'status-dev'}`;
+
+        console.log('Entorno:', isProduction ? 'Producción' : 'Desarrollo');
+        console.log('API Base URL:', API_BASE_URL);
+
+        // Elementos del DOM
+        const startRecordBtn = document.getElementById('startRecordBtn');
+        const stopRecordBtn = document.getElementById('stopRecordBtn');
+        const audioFileIn = document.getElementById('audioFile');
+        const audioPlaybackDiv = document.getElementById('audioPlayback');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const transcriptionOutput = document.getElementById('transcriptionOutput');
+        const showAnalysisBtn = document.getElementById('showAnalysisBtn');
+        const geminiAnalysisSection = document.getElementById('geminiAnalysisSection');
+        const geminiAnalysisOutput = document.getElementById('geminiAnalysisOutput');
+        const recordingStatusContainer = document.getElementById('recordingStatusContainer');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const statusMessage = document.getElementById('statusMessage');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob = null;
+        let currentGeminiAnalysis = null;
+        const originalStartBtnText = startRecordBtn.innerHTML;
+
+        // --- Lógica de Grabación ---
+        startRecordBtn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+                
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm;codecs=opus' }); 
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    audioPlayer.src = audioUrl;
+                    audioPlaybackDiv.classList.remove('hidden');
+                    audioChunks = [];
+                    transcribeAudio(audioBlob);
+                };
+
+                audioChunks = [];
+                mediaRecorder.start();
+                
+                // Actualizar UI para estado de grabación
+                statusMessage.textContent = 'Grabando...';
+                recordingIndicator.classList.remove('hidden');
+                startRecordBtn.innerHTML = `<span class="recording-indicator !ml-0 !mr-2 !animate-none !bg-white"></span> Grabando...`;
+                startRecordBtn.classList.add('bg-indigo-800', 'cursor-not-allowed');
+                startRecordBtn.disabled = true;
+                stopRecordBtn.disabled = false;
+                audioFileIn.disabled = true;
+
+                transcriptionOutput.textContent = 'Grabando audio...';
+                geminiAnalysisSection.classList.add('hidden');
+                geminiAnalysisOutput.textContent = 'Análisis no disponible.';
+                showAnalysisBtn.disabled = true;
+                currentGeminiAnalysis = null;
+
+            } catch (err) {
+                console.error('Error al acceder al micrófono:', err);
+                statusMessage.textContent = 'Error al acceder al micrófono.';
+                recordingIndicator.classList.add('hidden');
+                alert('No se pudo acceder al micrófono. Por favor, verifique los permisos del navegador.\\nError: ' + err.message);
+                startRecordBtn.disabled = false;
+                startRecordBtn.innerHTML = originalStartBtnText;
+                startRecordBtn.classList.remove('bg-indigo-800', 'cursor-not-allowed');
+            }
+        });
+
+        stopRecordBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            statusMessage.textContent = 'Grabación detenida. Procesando...';
+            recordingIndicator.classList.add('hidden');
+            
+            startRecordBtn.disabled = false;
+            startRecordBtn.innerHTML = originalStartBtnText;
+            startRecordBtn.classList.remove('bg-indigo-800', 'cursor-not-allowed');
+            stopRecordBtn.disabled = true;
+            audioFileIn.disabled = false;
+        });
+
+        // --- Lógica de Carga de Archivo ---
+        audioFileIn.addEventListener('change', event => {
+            const file = event.target.files[0];
+            if (file) {
+                audioBlob = file; 
+                const audioUrl = URL.createObjectURL(file);
+                audioPlayer.src = audioUrl;
+                audioPlaybackDiv.classList.remove('hidden');
+                statusMessage.textContent = 'Archivo cargado. Procesando...';
+                recordingIndicator.classList.add('hidden');
+                transcriptionOutput.textContent = 'Procesando archivo de audio...';
+                geminiAnalysisSection.classList.add('hidden');
+                geminiAnalysisOutput.textContent = 'Análisis no disponible.';
+                showAnalysisBtn.disabled = true;
+                currentGeminiAnalysis = null;
+                transcribeAudio(audioBlob);
+            }
+        });
+
+        // --- Transcripción con Backend ---
+        async function transcribeAudio(audioBlobToTranscribe) {
+            if (!audioBlobToTranscribe) {
+                statusMessage.textContent = 'No hay audio para transcribir.';
+                recordingIndicator.classList.add('hidden');
+                return;
+            }
+
+            loadingSpinner.classList.remove('hidden');
+            transcriptionOutput.textContent = 'Enviando audio al servidor para transcripción y análisis...';
+            statusMessage.textContent = 'Procesando, por favor espere...';
+            recordingIndicator.classList.add('hidden');
+
+            const formData = new FormData();
+            let fileName = "audio_grabado.webm"; 
+            if (audioBlobToTranscribe.type.includes("wav")) {
+                fileName = "audio_cargado.wav";
+            } else if (audioBlobToTranscribe.type.includes("mp3")) {
+                fileName = "audio_cargado.mp3";
+            }
+            
+            formData.append('audioFile', audioBlobToTranscribe, fileName);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/transcription/upload`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                loadingSpinner.classList.add('hidden');
+
+                if (!response.ok) {
+                    let errorDetails = "Error del servidor.";
+                    try {
+                        const errorData = await response.json();
+                        errorDetails = errorData.error || errorData.details || errorData.message || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorDetails = `HTTP error! status: ${response.status}. ${response.statusText}`;
+                    }
+                    throw new Error(errorDetails);
+                }
+
+                const data = await response.json();
+
+                if (data.originalTranscription) {
+                    transcriptionOutput.textContent = data.originalTranscription;
+                    statusMessage.textContent = 'Proceso completado. Transcripción y análisis recibidos.';
+                    if (data.geminiAnalysis) {
+                        currentGeminiAnalysis = data.geminiAnalysis;
+                        showAnalysisBtn.disabled = false;
+                    } else {
+                        currentGeminiAnalysis = "El análisis de IA no fue devuelto por el servidor.";
+                        showAnalysisBtn.disabled = true; 
+                    }
+                } else {
+                    throw new Error(data.error || 'La transcripción no fue devuelta por el servidor.');
+                }
+
+            } catch (error) {
+                console.error('Error en la transcripción/análisis:', error);
+                transcriptionOutput.textContent = `Error: ${error.message}`;
+                statusMessage.textContent = 'Error durante el procesamiento.';
+                loadingSpinner.classList.add('hidden');
+                showAnalysisBtn.disabled = true;
+                currentGeminiAnalysis = null;
+            }
+        }
+
+        // --- Lógica para Mostrar Análisis de Gemini ---
+        showAnalysisBtn.addEventListener('click', () => {
+            if (currentGeminiAnalysis) {
+                geminiAnalysisOutput.textContent = currentGeminiAnalysis;
+                geminiAnalysisSection.classList.remove('hidden');
+                geminiAnalysisSection.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                geminiAnalysisOutput.textContent = 'El análisis de IA no está disponible o no se ha generado.';
+                geminiAnalysisSection.classList.remove('hidden');
+            }
+        });
+
+        // Ocultar indicador de entorno después de 3 segundos
+        setTimeout(() => {
+            envIndicator.style.opacity = '0.7';
+        }, 3000);
+    </script>
+</body>
+</html>
