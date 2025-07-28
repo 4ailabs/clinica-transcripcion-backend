@@ -30,8 +30,9 @@ Ve a tu dashboard de Vercel y configura estas variables:
 Después de configurar las variables:
 
 1. Ve a tu aplicación en Vercel
-2. Visita: `https://tu-app.vercel.app/api/test-env`
-3. Deberías ver algo como:
+2. Visita: `https://tu-app.vercel.app/api/test-env` (verificación general)
+3. Visita: `https://tu-app.vercel.app/api/test-gemini` (prueba específica de Gemini)
+4. Deberías ver algo como:
 ```json
 {
   "googleCredentials": {
@@ -61,6 +62,13 @@ Después de configurar las variables:
 #### Error: "GEMINI_API_KEY not set"
 - **Solución**: Configura la variable en Vercel con tu API key
 
+#### Error: "Gemini API error: 400"
+- **Solución**: 
+  1. Verifica que tu API key de Gemini sea válida
+  2. Asegúrate de que la API key tenga permisos para el modelo gemini-1.5-flash
+  3. Visita `/api/test-gemini` para diagnosticar el problema específico
+  4. Verifica que no haya espacios extra o caracteres inválidos en la API key
+
 #### Error: "Google Speech Client initialization failed"
 - **Solución**: Verifica que el JSON de credenciales sea válido
 
@@ -76,6 +84,7 @@ Después de configurar las variables:
 
 - [ ] Variables de entorno configuradas en Vercel
 - [ ] `/api/test-env` muestra configuración correcta
+- [ ] `/api/test-gemini` responde exitosamente
 - [ ] `/api/health` responde correctamente
 - [ ] Frontend carga sin errores
 - [ ] Grabación de audio funciona
