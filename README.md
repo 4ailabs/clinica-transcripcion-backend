@@ -41,11 +41,30 @@ npm start
 
 ## 🌍 Variables de Entorno
 
+### Para Desarrollo Local
+Crea un archivo `.env` en la raíz del proyecto:
+
 ```env
 PORT=3001
 GOOGLE_APPLICATION_CREDENTIALS=ruta/a/tu/archivo/credenciales.json
 GEMINI_API_KEY=tu_gemini_api_key
 ```
+
+### Para Vercel (Producción)
+Configura las siguientes variables de entorno en tu proyecto de Vercel:
+
+1. **GOOGLE_APPLICATION_CREDENTIALS**: 
+   - Copia TODO el contenido del archivo JSON de credenciales de Google Cloud
+   - Debe ser un JSON válido como string
+
+2. **GEMINI_API_KEY**: 
+   - Tu API key de Gemini AI
+
+3. **PORT**: 
+   - Vercel lo configura automáticamente
+
+### Verificar Configuración
+Visita `/api/test-env` para verificar que las variables estén configuradas correctamente.
 
 ## 🚀 Despliegue en Vercel
 
@@ -73,7 +92,10 @@ GEMINI_API_KEY=tu_gemini_api_key
 
 ## 🔗 API Endpoints
 
+- `GET /` - Interfaz web principal
 - `POST /api/transcription/upload` - Sube y transcribe archivo de audio
+- `GET /api/health` - Verificar estado del servidor
+- `GET /api/test-env` - Verificar configuración de variables de entorno
 
 ## 👨‍⚕️ Autor
 
