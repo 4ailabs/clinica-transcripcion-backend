@@ -124,3 +124,51 @@ Si necesitas ayuda adicional:
 1. Revisa los logs de Vercel
 2. Verifica la configuración con `/api/test-env`
 3. Asegúrate de que las variables de entorno estén correctamente configuradas 
+
+## 🎯 **¡Problema Identificado!**
+
+Los resultados muestran que:
+
+### ✅ **Lo que está funcionando:**
+- Google Cloud está configurado correctamente
+- Las variables de entorno están configuradas
+- El servidor está funcionando
+
+### ❌ **El problema específico:**
+- **API key de Gemini inválida**: El error dice "API key not valid. Please pass a valid API key."
+
+## 🔧 **Solución: Obtener una Nueva API Key de Gemini**
+
+### Paso 1: Ir a Google AI Studio
+1. Ve a [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Inicia sesión con tu cuenta de Google
+
+### Paso 2: Crear Nueva API Key
+1. Click en **"Create API Key"**
+2. Selecciona tu proyecto de Google Cloud
+3. Copia la nueva API key
+
+### Paso 3: Actualizar en Vercel
+1. Ve a tu dashboard de Vercel
+2. Selecciona tu proyecto `clinica-transcripcion`
+3. Ve a **Settings** → **Environment Variables**
+4. Encuentra `GEMINI_API_KEY`
+5. Click en **Edit** y reemplaza con la nueva API key
+6. Click **Save**
+
+### Paso 4: Verificar
+Después de actualizar la API key, Vercel hará redeploy automáticamente. Luego prueba:
+
+```bash
+<code_block_to_apply_changes_from>
+curl -X GET "https://clinica-transcripcion.vercel.app/api/test-gemini"
+```
+
+## 📋 **Resumen del Diagnóstico**
+
+- ✅ Google Cloud: Funcionando
+- ✅ Variables de entorno: Configuradas
+- ❌ Gemini API Key: Inválida
+- 🔧 **Solución**: Obtener nueva API key de Gemini
+
+¿Necesitas ayuda para obtener la nueva API key de Gemini? 

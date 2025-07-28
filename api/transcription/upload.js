@@ -129,29 +129,44 @@ async function analyzeWithGemini(transcription) {
 
         console.log('Enviando transcripción a Gemini para análisis...');
 
-        const prompt = `Eres un asistente médico especializado. Analiza esta transcripción de consulta médica:
+        const prompt = `Eres un asistente experto para un terapeuta de biomagnetismo y bioenergética, el Dr. Miguel Ojeda Ríos.
+Tu tarea es analizar la siguiente transcripción de la Fase 1 de una consulta ("Aterrizaje Clínico-Energético") y extraer información estructurada de manera clara y profesional.
 
-"${transcription}"
+**Contexto de la Fase 1:**
+* Mini-entrevista clínica y exploración física.
+* Definición de intención terapéutica.
+* Evaluación express del terreno biológico (deficiencias, intoxicación, hábitos).
+* Identificación simbólica del conflicto biológico (separación, territorio, duelo, etc.).
+* Explicación breve del modelo: terreno ↔ conflicto ↔ memoria.
 
-Proporciona un análisis estructurado con:
+**Transcripción de la Consulta:**
+---
+${transcription}
+---
 
-**🔍 SÍNTOMAS IDENTIFICADOS:**
-- Lista los síntomas mencionados
+**Por favor, extrae y estructura la siguiente información de la transcripción anterior:**
 
-**🩺 EVALUACIÓN CLÍNICA:**
-- Posibles diagnósticos a considerar
-- Gravedad aparente
+1. **Motivo Principal de la Consulta y Síntomas Clave:**
+   * Describe el motivo principal expresado por el paciente.
+   * Lista los síntomas clave mencionados, su duración aproximada si se indica, y cualquier evolución reportada.
 
-**📋 RECOMENDACIONES:**
-- Estudios complementarios sugeridos
-- Acciones inmediatas recomendadas
+2. **Intención Terapéutica:**
+   * Identifica la intención terapéutica expresada por el paciente (lo que busca lograr).
+   * Si el terapeuta sugiere o define una intención, inclúyela también.
 
-**⚠️ NOTAS IMPORTANTES:**
-- Observaciones clínicas relevantes
+3. **Evaluación del Terreno Biológico (Pistas):**
+   * **Deficiencias/Intoxicación (Sospechas):** Menciona cualquier síntoma o comentario que pueda sugerir deficiencias nutricionales o algún tipo de intoxicación.
+   * **Hábitos Relevantes:** Identifica comentarios sobre dieta, hidratación, sueño, ejercicio, niveles de estrés.
 
-Mantén un tono profesional y médico.`;
+4. **Conflicto Biológico Simbólico (Pistas):**
+   * Identifica palabras clave, frases, emociones expresadas o eventos de vida mencionados que puedan sugerir un conflicto biológico simbólico.
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`, {
+5. **Comprensión del Modelo Terapéutico:**
+   * Indica si hay alguna mención o evidencia de que el paciente comprende (o se le explica) el modelo "terreno ↔ conflicto ↔ memoria".
+
+Mantén un tono profesional y objetivo. Si alguna sección no tiene información clara en la transcripción, indica "No se encontró información clara" para esa sección.`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
