@@ -5,7 +5,7 @@ const multer = require('multer');
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB límite
+        fileSize: 8 * 1024 * 1024, // 8MB límite (para 8 minutos de audio)
     },
     fileFilter: (req, file, cb) => {
         // Aceptar solo archivos de audio
@@ -226,6 +226,7 @@ module.exports = async (req, res) => {
     }
 
     console.log('=== Iniciando procesamiento de audio ===');
+    console.log('Límite de archivo: 8MB (configurado para 8 minutos de audio)');
 
     try {
         // Procesar archivo con multer
@@ -239,6 +240,17 @@ module.exports = async (req, res) => {
         if (!req.file) {
             console.error('No se recibió archivo');
             return res.status(400).json({ error: 'No se recibió archivo de audio' });
+        }
+
+        // Validar tamaño del archivo (máximo 8MB para 8 minutos de audio)
+        const maxSize = 8 * 1024 * 1024; // 8MB
+        if (req.file.size > maxSize) {
+            console.error(`Archivo demasiado grande: ${req.file.size} bytes (máximo ${maxSize} bytes)`);
+            return res.status(413).json({ 
+                error: 'Archivo demasiado grande', 
+                details: `El archivo excede el límite de 8MB. Tamaño actual: ${(req.file.size / 1024 / 1024).toFixed(2)}MB`,
+                maxSize: '8MB'
+            });
         }
 
         console.log('Archivo recibido:', {

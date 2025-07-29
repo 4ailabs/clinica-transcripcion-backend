@@ -1,5 +1,21 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "functions": {
+    "api/transcription/upload.js": {
+      "maxDuration": 120
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/transcription/upload",
+      "dest": "/api/transcription/upload.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    }
+  ]
 }
