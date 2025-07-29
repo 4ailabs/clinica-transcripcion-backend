@@ -144,16 +144,19 @@
             <span id="statusMessage" class="text-base text-gray-700 font-medium"></span>
         </div>
 
-        <div id="audioPlayback" class="my-4 p-3 border border-gray-200 rounded-lg hidden">
+        <div id="audioPlayback" class="my-4 p-3 border border-gray-200 rounded-lg">
             <h3 class="text-md font-semibold text-gray-700 mb-2">Audio Capturado:</h3>
-            <div id="audioInfo" class="text-sm text-gray-600 mb-2 text-center"></div>
+            <div id="audioInfo" class="text-sm text-gray-600 mb-2 text-center">No hay audio disponible</div>
             <audio id="audioPlayer" controls class="w-full audio-player rounded-md mb-3"></audio>
-            <div class="flex justify-center">
+            <div class="flex justify-center space-x-4">
                 <button id="downloadAudioBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 flex items-center text-lg">
                     <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                     </svg>
                     📥 Descargar Audio
+                </button>
+                <button id="testDownloadBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 flex items-center text-lg">
+                    🧪 Probar Descarga
                 </button>
             </div>
         </div>
@@ -219,6 +222,7 @@
         const statusMessage = document.getElementById('statusMessage');
         const loadingSpinner = document.getElementById('loadingSpinner');
         const downloadAudioBtn = document.getElementById('downloadAudioBtn');
+        const testDownloadBtn = document.getElementById('testDownloadBtn');
         const audioInfo = document.getElementById('audioInfo');
 
         let mediaRecorder;
@@ -449,6 +453,22 @@
 
         // Event listener para el botón de descarga
         downloadAudioBtn.addEventListener('click', downloadAudio);
+
+        // Event listener para el botón de prueba
+        testDownloadBtn.addEventListener('click', () => {
+            console.log('Creando archivo de audio de prueba...');
+            
+            // Crear un archivo de audio de prueba simple
+            const testAudioBlob = new Blob(['test audio content'], { type: 'audio/wav' });
+            audioBlob = testAudioBlob;
+            currentFileName = 'audio_prueba.wav';
+            
+            // Actualizar la información
+            updateAudioInfo();
+            
+            // Intentar descargar
+            downloadAudio();
+        });
 
         // Ocultar indicador de entorno después de 3 segundos
         setTimeout(() => {
