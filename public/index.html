@@ -149,11 +149,11 @@
             <div id="audioInfo" class="text-sm text-gray-600 mb-2 text-center"></div>
             <audio id="audioPlayer" controls class="w-full audio-player rounded-md mb-3"></audio>
             <div class="flex justify-center">
-                <button id="downloadAudioBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <button id="downloadAudioBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 flex items-center text-lg">
+                    <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                     </svg>
-                    Descargar Audio
+                    📥 Descargar Audio
                 </button>
             </div>
         </div>
@@ -248,6 +248,7 @@
                     const audioUrl = URL.createObjectURL(audioBlob);
                     audioPlayer.src = audioUrl;
                     audioPlaybackDiv.classList.remove('hidden');
+                    console.log('Audio playback div mostrado:', audioPlaybackDiv.classList.contains('hidden'));
                     updateAudioInfo(); // Mostrar información del archivo
                     audioChunks = [];
                     transcribeAudio(audioBlob);
@@ -305,6 +306,7 @@
                 const audioUrl = URL.createObjectURL(file);
                 audioPlayer.src = audioUrl;
                 audioPlaybackDiv.classList.remove('hidden');
+                console.log('Audio playback div mostrado (archivo):', audioPlaybackDiv.classList.contains('hidden'));
                 updateAudioInfo(); // Mostrar información del archivo
                 statusMessage.textContent = 'Archivo cargado. Procesando...';
                 recordingIndicator.classList.add('hidden');
@@ -410,6 +412,10 @@
 
         // --- Función para Descargar Audio ---
         function downloadAudio() {
+            console.log('Función downloadAudio ejecutada');
+            console.log('audioBlob disponible:', !!audioBlob);
+            console.log('currentFileName:', currentFileName);
+            
             if (!audioBlob) {
                 alert('No hay audio disponible para descargar.');
                 return;
