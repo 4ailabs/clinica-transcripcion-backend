@@ -146,7 +146,16 @@
 
         <div id="audioPlayback" class="my-4 p-3 border border-gray-200 rounded-lg hidden">
             <h3 class="text-md font-semibold text-gray-700 mb-2">Audio Capturado:</h3>
-            <audio id="audioPlayer" controls class="w-full audio-player rounded-md"></audio>
+            <div id="audioInfo" class="text-sm text-gray-600 mb-2 text-center"></div>
+            <audio id="audioPlayer" controls class="w-full audio-player rounded-md mb-3"></audio>
+            <div class="flex justify-center">
+                <button id="downloadAudioBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    Descargar Audio
+                </button>
+            </div>
         </div>
         
         <div id="loadingSpinner" class="hidden flex justify-center items-center my-4">
@@ -209,11 +218,14 @@
         const recordingIndicator = document.getElementById('recordingIndicator');
         const statusMessage = document.getElementById('statusMessage');
         const loadingSpinner = document.getElementById('loadingSpinner');
+        const downloadAudioBtn = document.getElementById('downloadAudioBtn');
+        const audioInfo = document.getElementById('audioInfo');
 
         let mediaRecorder;
         let audioChunks = [];
         let audioBlob = null;
         let currentGeminiAnalysis = null;
+        let currentFileName = "audio_grabado.webm";
         const originalStartBtnText = startRecordBtn.innerHTML;
 
         // --- Lógica de Grabación ---
@@ -228,9 +240,15 @@
 
                 mediaRecorder.onstop = () => {
                     audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm;codecs=opus' }); 
+                    // Generar nombre de archivo con timestamp
+                    const now = new Date();
+                    const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                    currentFileName = `grabacion_${timestamp}.webm`;
+                    
                     const audioUrl = URL.createObjectURL(audioBlob);
                     audioPlayer.src = audioUrl;
                     audioPlaybackDiv.classList.remove('hidden');
+                    updateAudioInfo(); // Mostrar información del archivo
                     audioChunks = [];
                     transcribeAudio(audioBlob);
                 };
@@ -283,9 +301,11 @@
             const file = event.target.files[0];
             if (file) {
                 audioBlob = file; 
+                currentFileName = file.name; // Usar el nombre original del archivo
                 const audioUrl = URL.createObjectURL(file);
                 audioPlayer.src = audioUrl;
                 audioPlaybackDiv.classList.remove('hidden');
+                updateAudioInfo(); // Mostrar información del archivo
                 statusMessage.textContent = 'Archivo cargado. Procesando...';
                 recordingIndicator.classList.add('hidden');
                 transcriptionOutput.textContent = 'Procesando archivo de audio...';
@@ -376,6 +396,53 @@
                 geminiAnalysisSection.classList.remove('hidden');
             }
         });
+
+        // --- Función para Mostrar Información del Audio ---
+        function updateAudioInfo() {
+            if (audioBlob) {
+                const sizeInMB = (audioBlob.size / (1024 * 1024)).toFixed(2);
+                const sizeInKB = (audioBlob.size / 1024).toFixed(1);
+                const sizeText = sizeInMB >= 1 ? `${sizeInMB} MB` : `${sizeInKB} KB`;
+                
+                audioInfo.textContent = `Archivo: ${currentFileName} | Tamaño: ${sizeText}`;
+            }
+        }
+
+        // --- Función para Descargar Audio ---
+        function downloadAudio() {
+            if (!audioBlob) {
+                alert('No hay audio disponible para descargar.');
+                return;
+            }
+
+            // Crear URL del blob
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            // Crear elemento de descarga
+            const downloadLink = document.createElement('a');
+            downloadLink.href = audioUrl;
+            downloadLink.download = currentFileName;
+            downloadLink.style.display = 'none';
+            
+            // Agregar al DOM, hacer clic y limpiar
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            // Liberar la URL del blob
+            URL.revokeObjectURL(audioUrl);
+            
+            // Mostrar confirmación
+            statusMessage.textContent = 'Audio descargado exitosamente.';
+            setTimeout(() => {
+                if (statusMessage.textContent === 'Audio descargado exitosamente.') {
+                    statusMessage.textContent = '';
+                }
+            }, 3000);
+        }
+
+        // Event listener para el botón de descarga
+        downloadAudioBtn.addEventListener('click', downloadAudio);
 
         // Ocultar indicador de entorno después de 3 segundos
         setTimeout(() => {
